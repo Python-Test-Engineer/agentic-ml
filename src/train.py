@@ -26,7 +26,7 @@ from sklearn.preprocessing import PolynomialFeatures
 
 
 def train_and_predict(train_X, train_y, val_X):
-    poly = PolynomialFeatures(degree=3, include_bias=False)
+    poly = PolynomialFeatures(degree=4, include_bias=False)
     train_X_poly = poly.fit_transform(train_X)
     val_X_poly = poly.transform(val_X)
     model = LinearRegression()
