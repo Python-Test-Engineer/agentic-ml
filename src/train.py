@@ -22,6 +22,7 @@
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.svm import SVR
 from sklearn.model_selection import GridSearchCV
@@ -36,18 +37,33 @@ def train_and_predict(train_X, train_y, val_X):
     lr.fit(train_poly, train_y)
     pred_lr = lr.predict(val_poly)
 
-    # Model 2: SVR with RBF kernel, GridSearchCV on raw features
+    # Scaled raw features for kernel/neural models
     scaler = StandardScaler()
     train_scaled = scaler.fit_transform(train_X)
     val_scaled = scaler.transform(val_X)
-    param_grid = {
+
+    # Model 2: SVR with RBF kernel
+    svr_grid = {
         "C": [1, 10, 100, 1000],
         "gamma": ["scale", "auto", 0.1, 1.0],
         "epsilon": [0.01, 0.05, 0.1],
     }
-    gs = GridSearchCV(SVR(kernel="rbf"), param_grid, cv=5,
-                      scoring="neg_mean_squared_error")
-    gs.fit(train_scaled, train_y)
-    pred_svr = gs.predict(val_scaled)
+    gs_svr = GridSearchCV(SVR(kernel="rbf"), svr_grid, cv=5,
+                          scoring="neg_mean_squared_error")
+    gs_svr.fit(train_scaled, train_y)
+    pred_svr = gs_svr.predict(val_scaled)
 
-    return (pred_lr + pred_svr) / 2
+    # Model 3: MLP neural network
+    mlp = MLPRegressor(
+        hidden_layer_sizes=(64, 64, 32),
+        activation="relu",
+        max_iter=2000,
+        random_state=42,
+        early_stopping=True,
+        validation_fraction=0.1,
+        n_iter_no_change=30,
+    )
+    mlp.fit(train_scaled, train_y)
+    pred_mlp = mlp.predict(val_scaled)
+
+    return (pred_lr + pred_svr + pred_mlp) / 3
