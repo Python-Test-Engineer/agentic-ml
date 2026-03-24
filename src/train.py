@@ -21,21 +21,33 @@
 #   - Keep this function self-contained.
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.svm import SVR
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 
 
 def train_and_predict(train_X, train_y, val_X):
+    # Model 1: degree-5 polynomial OLS
+    poly = PolynomialFeatures(degree=5, include_bias=False)
+    train_poly = poly.fit_transform(train_X)
+    val_poly = poly.transform(val_X)
+    lr = LinearRegression()
+    lr.fit(train_poly, train_y)
+    pred_lr = lr.predict(val_poly)
+
+    # Model 2: SVR with RBF kernel, GridSearchCV on raw features
     scaler = StandardScaler()
-    train_X_scaled = scaler.fit_transform(train_X)
-    val_X_scaled = scaler.transform(val_X)
+    train_scaled = scaler.fit_transform(train_X)
+    val_scaled = scaler.transform(val_X)
     param_grid = {
         "C": [1, 10, 100, 1000],
         "gamma": ["scale", "auto", 0.1, 1.0],
         "epsilon": [0.01, 0.05, 0.1],
     }
-    svr = SVR(kernel="rbf")
-    gs = GridSearchCV(svr, param_grid, cv=5, scoring="neg_mean_squared_error")
-    gs.fit(train_X_scaled, train_y)
-    return gs.predict(val_X_scaled)
+    gs = GridSearchCV(SVR(kernel="rbf"), param_grid, cv=5,
+                      scoring="neg_mean_squared_error")
+    gs.fit(train_scaled, train_y)
+    pred_svr = gs.predict(val_scaled)
+
+    return (pred_lr + pred_svr) / 2
