@@ -8,3 +8,9 @@ experiment	commit	val_mse	prev_best_mse	improvement	elapsed_sec	status	model_typ
 6	97c4dd8	0.159090	0.176694	-10.0%	0.0	keep	LinearRegression+PolyFeatures	degree-5 polynomial to probe for quintic structure
 7	f47bebd	0.242140	0.159090	+52.2%	0.0	discard	LinearRegression+PolyFeatures	degree-6 polynomial — overfitting threshold reached
 8	a8e3f3f	0.183575	0.159090	+15.4%	0.0	discard	LassoCV+PolyFeatures	LassoCV + degree-5 poly — Lasso over-penalizes
+9	e1a417e	0.152485	0.159090	-4.2%	1.8	keep	SVR(RBF)+GridSearchCV	SVR RBF kernel GridSearchCV on raw features
+10	fd51da3	76.393808	0.152485	+50000%	0.2	discard	GaussianProcessRegressor	GPR RBF failed — non-stationary function
+11	5b95cdb	1.427035	0.152485	+835%	0.5	discard	SVR(RBF)+PolyFeatures	SVR RBF on poly features — double transform hurts
+12	09f6f81	0.153026	0.152485	+0.4%	0.2	discard	KernelRidge(RBF)+GridSearchCV	KernelRidge RBF ties SVR but does not beat
+13	d5de9db	0.141008	0.152485	-7.5%	1.5	keep	Ensemble(OLS+SVR)	2-model ensemble degree-5 OLS + SVR-RBF
+14	25c0f2c	0.143041	0.141008	+1.4%	1.8	discard	Ensemble(OLS+SVR+KR)	3-model ensemble — KernelRidge redundant with SVR

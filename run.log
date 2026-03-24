@@ -1,4 +1,4 @@
-val_mse:          0.183575
-elapsed_seconds:  0.0
+val_mse:          0.158468
+elapsed_seconds:  2.0
 num_rows_train:   80
 num_rows_val:     20

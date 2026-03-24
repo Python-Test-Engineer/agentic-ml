@@ -150,3 +150,63 @@ Elapsed: 0.0s
 **Conclusion:** Lasso hurt. The polynomial features are all genuinely useful — Lasso's sparsity-inducing penalty incorrectly zeros out important terms, introducing bias. The same phenomenon seen with RidgeCV (experiment 4): regularization hurts because the polynomial basis matches the true function's structure. OLS without penalty is the right choice.
 
 **Next direction:** Try SVR with RBF or polynomial kernel. Kernel methods are well-suited for small datasets and can implicitly represent infinite-degree polynomials. GaussianProcessRegressor is another strong candidate for n=80.
+
+---
+
+### Experiment 9 — keep
+**Hypothesis:** SVR(RBF)+GridSearchCV on raw features beats degree-5 OLS via implicit infinite-degree representation.
+**Reasoning:** RBF = infinite-dim feature space; 48-combo grid search via 5-fold CV finds optimal C, gamma, epsilon.
+**What changed:** LinearRegression+PolynomialFeatures → SVR(rbf)+StandardScaler+GridSearchCV.
+**Result:** val_mse = 0.152485 (prev best: 0.159090, change: -4.2%), Elapsed: 1.8s
+**Conclusion:** SVR(RBF) beats degree-5 OLS. New best.
+**Next direction:** Try GPR with RBF+WhiteKernel.
+
+---
+
+### Experiment 10 — discard
+**Hypothesis:** GPR(RBF+WhiteKernel, n_restarts=10) optimally models this smooth noisy function.
+**Reasoning:** GPR theoretically optimal for smooth Gaussian processes.
+**What changed:** SVR+GridSearchCV → GaussianProcessRegressor.
+**Result:** val_mse = 76.393808 (catastrophic)
+**Conclusion:** RBF stationary kernel violates polynomial growth assumption. Reverted.
+**Next direction:** Try SVR on degree-5 poly features.
+
+---
+
+### Experiment 11 — discard
+**Hypothesis:** SVR(RBF) on degree-5 poly features combines explicit polynomial basis with kernel regularization.
+**Reasoning:** Degree-5 OLS=0.159, SVR(raw)=0.152. Combining might leverage both.
+**What changed:** Added PolynomialFeatures(degree=5) before SVR.
+**Result:** val_mse = 1.427035, Elapsed: 0.5s
+**Conclusion:** SVR on poly features fails — multicollinear degree-5 features create poor RBF metric. Rule: no polynomial features with kernel methods.
+**Next direction:** Try KernelRidge(rbf) on raw features.
+
+---
+
+### Experiment 12 — discard
+**Hypothesis:** KernelRidge(RBF)+GridSearchCV is more stable than SVR and may edge it out.
+**Reasoning:** KernelRidge = kernel ridge regression. Different optimization from SVR.
+**What changed:** SVR+GridSearchCV → KernelRidge(rbf)+GridSearchCV over alpha, gamma.
+**Result:** val_mse = 0.153026 (prev best: 0.152485, change: +0.4%), Elapsed: 0.2s
+**Conclusion:** KernelRidge essentially ties SVR (0.153 vs 0.152). Both converge to same solution.
+**Next direction:** Ensemble averaging of degree-5 OLS + SVR(RBF).
+
+---
+
+### Experiment 13 — keep
+**Hypothesis:** Averaging degree-5 OLS and SVR(RBF) reduces variance by exploiting uncorrelated errors.
+**Reasoning:** Different inductive biases (explicit polynomial vs kernel implicit) yield partially uncorrelated errors. Averaging reduces variance.
+**What changed:** Added degree-5 OLS alongside SVR; returned (pred_lr + pred_svr) / 2.
+**Result:** val_mse = 0.141008 (prev best: 0.152485, change: -7.5%), Elapsed: 1.5s
+**Conclusion:** Ensemble averaging reduced MSE 7.5%. Both models contribute distinct information. New best: 0.141.
+**Next direction:** Try 3-model ensemble adding KernelRidge(RBF) as third member.
+
+---
+
+### Experiment 14 — discard
+**Hypothesis:** Adding KernelRidge(RBF) as a third ensemble member further reduces variance.
+**Reasoning:** If KernelRidge errors are uncorrelated with OLS+SVR, averaging 3 models helps.
+**What changed:** Added KernelRidge(RBF)+GridSearchCV as third model; averaged all three equally.
+**Result:** val_mse = 0.143041 (prev best: 0.141008, change: +1.4%), Elapsed: 1.8s
+**Conclusion:** KernelRidge and SVR make nearly identical predictions (correlated errors), so adding it dilutes the ensemble. Three models worse than two. Rule: ensemble members must have diverse inductive biases.
+**Next direction:** Try adding MLPRegressor (neural network) as a third ensemble member — truly different inductive bias from both OLS and SVR. Or try optimizing ensemble weights via cross-validation instead of equal weighting.
