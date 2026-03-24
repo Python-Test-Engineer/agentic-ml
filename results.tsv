@@ -1,0 +1,10 @@
+experiment	commit	val_mse	prev_best_mse	improvement	elapsed_sec	status	model_type	description
+0	082bcd1	76.041106	-	-	0.0	keep	LinearRegression	baseline linear regression
+1	6c251cf	0.757237	76.041106	-99.0%	0.0	keep	LinearRegression+PolyFeatures	degree-2 polynomial features + linear regression
+2	8ab4eeb	0.196930	0.757237	-74.0%	0.0	keep	LinearRegression+PolyFeatures	degree-3 polynomial features to capture higher-order terms
+3	6d6e0e0	0.176694	0.196930	-10.3%	0.0	keep	LinearRegression+PolyFeatures	degree-4 polynomial features to probe for quartic structure
+4	73fca82	0.196487	0.176694	+11.2%	0.0	discard	RidgeCV+PolyFeatures	degree-3 poly + RidgeCV + StandardScaler
+5	26d01f6	3.157156	0.176694	+1688%	0.1	discard	GradientBoostingRegressor	GBM on raw features — wrong basis
+6	97c4dd8	0.159090	0.176694	-10.0%	0.0	keep	LinearRegression+PolyFeatures	degree-5 polynomial to probe for quintic structure
+7	f47bebd	0.242140	0.159090	+52.2%	0.0	discard	LinearRegression+PolyFeatures	degree-6 polynomial — overfitting threshold reached
+8	a8e3f3f	0.183575	0.159090	+15.4%	0.0	discard	LassoCV+PolyFeatures	LassoCV + degree-5 poly — Lasso over-penalizes
